@@ -31,10 +31,25 @@
 ;;;###autoload
 (define-derived-mode move-mode prog-mode "Move"
   "Major mode for Move source code."
-  :group 'move-mode)
+  :group 'move-mode
+
+  (setq-local font-lock-defaults
+              '(move-mode-font-lock-keywords
+                nil ;; KEYWORDS-ONLY
+                nil ;; CASE-FOLD
+                nil ;; SYNTAX-ALIST
+                )))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.move\\'" . move-mode))
+
+(defconst move-keywords
+  '("abort" "acquires" "as" "break" "const" "continue" "copy" "else" "friend"
+    "fun" "has" "if" "invariant" "let" "loop" "module" "move" "native" "public"
+    "return" "script" "spec" "struct" "use" "while"))
+
+(defvar move-mode-font-lock-keywords
+  `(,(regexp-opt move-keywords 'symbols)))
 
 (provide 'move-mode)
 
