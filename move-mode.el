@@ -29,7 +29,7 @@
   :group 'languages)
 
 (defcustom move-builtin-functions
-  '("assert" "borrow_global" "exists" "freeze" "move_from" "move_to" "old")
+  '("assert!" "borrow_global" "exists" "freeze" "move_from" "move_to" "old")
   "Functions to highlight as builtins (mutations require restarting font-lock)."
   :type '(list string)
   :group 'move-mode)
