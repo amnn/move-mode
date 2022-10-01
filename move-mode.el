@@ -98,11 +98,17 @@
 (defconst move-ident-re
   "[a-zA-Z][a-zA-Z0-9_]*\\|_[a-zA-Z0-9_]+")
 
+(defconst move-type-re
+  "\\_<[A-Z][a-zA-Z0-9_]*\\_>")
+
 (defvar move-mode-font-lock-keywords
   `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
     (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)
     ("\\(#\\[[^]]*\\]\\)"                      1 font-lock-preprocessor-face keep)
     (,move-integer-with-type-re                1 font-lock-type-face)
+
+    ;; "Types" heuristic -- CapitalizedIdentifiers.
+    (,move-type-re                             . font-lock-type-face)
 
     ;; Module components
     (,(concat "\\(" move-ident-re "\\)::")     1 font-lock-constant-face)
