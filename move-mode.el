@@ -54,7 +54,9 @@
                 nil ;; KEYWORDS-ONLY
                 nil ;; CASE-FOLD
                 nil ;; SYNTAX-ALIST
-                )))
+                ;;;;;; VARIABLES
+                (font-lock-syntactic-face-function
+                 . move-mode-distinguish-comments))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.move\\'" . move-mode))
@@ -70,6 +72,17 @@
 (defvar move-mode-font-lock-keywords
   `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
     (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)))
+
+(defun move-mode-distinguish-comments (state)
+  "Distinguish between doc comments and normal comments in the given syntax
+STATE."
+  (save-excursion
+    (goto-char (nth 8 state))
+    (cond ((looking-at "//[/!][^/!]")
+           'font-lock-doc-face)
+          ((looking-at "/[*][*!][^*!]")
+           'font-lock-doc-face)
+          ('font-lock-comment-face))))
 
 (provide 'move-mode)
 
