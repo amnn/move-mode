@@ -80,12 +80,24 @@
     "fun" "has" "if" "invariant" "let" "loop" "module" "move" "native" "public"
     "return" "script" "spec" "struct" "use" "while"))
 
+(defconst move-integer-types
+  '("u8" "u64" "u128"))
+
 (defconst move-builtin-types
-  '("address" "bool" "u8" "u64" "u128" "vector"))
+  (append move-integer-types '("address" "bool" "vector")))
+
+(defconst move-integer-with-type-re
+  (eval-when-compile
+    (concat "\\_<"
+            "\\(?:0x?\\|[1-9]\\)"
+            "[[:digit:]a-fA-F]*"
+            (regexp-opt move-integer-types t)
+            "\\_>")))
 
 (defvar move-mode-font-lock-keywords
   `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
     (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)
+    (,move-integer-with-type-re                1 font-lock-type-face)
     (eval move--register-builtin-functions)))
 
 (defun move-mode-distinguish-comments (state)
