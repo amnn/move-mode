@@ -76,9 +76,9 @@
 (add-to-list 'auto-mode-alist '("\\.move\\'" . move-mode))
 
 (defconst move-keywords
-  '("abort" "acquires" "as" "break" "const" "continue" "copy" "else" "friend"
-    "fun" "has" "if" "invariant" "let" "loop" "module" "move" "native" "public"
-    "return" "script" "spec" "struct" "use" "while"))
+  '("abort" "acquires" "as" "break" "const" "continue" "copy" "else" "entry"
+    "friend" "fun" "has" "if" "invariant" "let" "loop" "module" "move" "native"
+    "public" "return" "script" "spec" "struct" "use" "while"))
 
 (defconst move-integer-types
   '("u8" "u64" "u128"))
