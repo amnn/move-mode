@@ -77,8 +77,9 @@
 
 (defconst move-keywords
   '("abort" "acquires" "as" "break" "const" "continue" "copy" "else" "entry"
-    "friend" "fun" "has" "if" "invariant" "let" "loop" "module" "move" "mut"
-    "native" "public" "return" "script" "spec" "struct" "use" "while"))
+    "false" "friend" "fun" "has" "if" "invariant" "let" "loop" "module" "move"
+    "mut" "native" "public" "return" "script" "spec" "struct" "true" "use"
+    "while"))
 
 (defconst move-integer-types
   '("u8" "u64" "u128"))
