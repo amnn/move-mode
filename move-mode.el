@@ -121,6 +121,10 @@
     (,(concat "\\_<let\\s-+\\(" move-ident-re "\\)\\_>")
      1 font-lock-variable-name-face)
 
+    ;; Function declarations
+    (,(concat "\\_<fun\\s-+\\(" move-ident-re "\\)")
+     1 font-lock-function-name-face)
+
     (eval move--register-builtin-functions)))
 
 (defun move-mode-distinguish-comments (state)
