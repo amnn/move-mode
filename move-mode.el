@@ -35,6 +35,12 @@
     (dolist (op '(?+ ?- ?* ?/ ?% ?& ?^ ?|))
       (modify-syntax-entry op "." table))
 
+    ;; Comments
+    (modify-syntax-entry ?/   ". 124b" table)
+    (modify-syntax-entry ?*   ". 23n"  table)
+    (modify-syntax-entry ?\n  "> b"    table)
+    (modify-syntax-entry ?\^m "> b"    table)
+
     table))
 
 ;;;###autoload
