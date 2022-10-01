@@ -94,11 +94,16 @@
             (regexp-opt move-integer-types t)
             "\\_>")))
 
+(defconst move-ident-re
+  "[a-zA-Z][a-zA-Z0-9_]*\\|_[a-zA-Z0-9_]+")
+
 (defvar move-mode-font-lock-keywords
   `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
     (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)
     ("\\(#\\[[^]]*\\]\\)"                      1 font-lock-preprocessor-face keep)
     (,move-integer-with-type-re                1 font-lock-type-face)
+    (,(concat "\\(" move-ident-re "\\)" "[[:space:]]*:[^:]")
+     1 font-lock-variable-name-face)
     (eval move--register-builtin-functions)))
 
 (defun move-mode-distinguish-comments (state)
