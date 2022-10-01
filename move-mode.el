@@ -102,8 +102,15 @@
     (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)
     ("\\(#\\[[^]]*\\]\\)"                      1 font-lock-preprocessor-face keep)
     (,move-integer-with-type-re                1 font-lock-type-face)
+
+    ;; Fields, function params, local variables with explicit types
     (,(concat "\\(" move-ident-re "\\)" "[[:space:]]*:[^:]")
      1 font-lock-variable-name-face)
+
+    ;; Let bindings with inferred type
+    (,(concat "\\_<let\\s-+\\(" move-ident-re "\\)\\_>")
+     1 font-lock-variable-name-face)
+
     (eval move--register-builtin-functions)))
 
 (defun move-mode-distinguish-comments (state)
