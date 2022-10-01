@@ -28,10 +28,20 @@
   :link '(url-link "https://github.com/move-language/move")
   :group 'languages)
 
+(defvar move-mode-syntax-table
+  (let ((table (make-syntax-table)))
+
+    ;; Operators
+    (dolist (op '(?+ ?- ?* ?/ ?% ?& ?^ ?|))
+      (modify-syntax-entry op "." table))
+
+    table))
+
 ;;;###autoload
 (define-derived-mode move-mode prog-mode "Move"
   "Major mode for Move source code."
   :group 'move-mode
+  :syntax-table move-mode-syntax-table
 
   (setq-local font-lock-defaults
               '(move-mode-font-lock-keywords
