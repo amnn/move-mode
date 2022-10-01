@@ -28,6 +28,12 @@
   :link '(url-link "https://github.com/move-language/move")
   :group 'languages)
 
+(defcustom move-builtin-functions
+  '("assert" "borrow_global" "exists" "freeze" "move_from" "move_to" "old")
+  "Functions to highlight as builtins (mutations require restarting font-lock)."
+  :type '(list string)
+  :group 'move-mode)
+
 (defvar move-mode-syntax-table
   (let ((table (make-syntax-table)))
 
@@ -71,11 +77,12 @@
 
 (defvar move-mode-font-lock-keywords
   `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
-    (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)))
+    (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)
+    (eval move--register-builtin-functions)))
 
 (defun move-mode-distinguish-comments (state)
   "Distinguish between doc comments and normal comments in the given syntax
-STATE."
+   STATE."
   (save-excursion
     (goto-char (nth 8 state))
     (cond ((looking-at "//[/!][^/!]")
@@ -83,6 +90,11 @@ STATE."
           ((looking-at "/[*][*!][^*!]")
            'font-lock-doc-face)
           ('font-lock-comment-face))))
+
+(defun move--register-builtin-functions ()
+  "Generate a font-lock MATCHER form for built-in functions, specified via the
+   MOVE-BUILTIN-FUNCTIONS custom variable."
+  `(,(regexp-opt move-builtin-functions 'symbols) . font-lock-builtin-face))
 
 (provide 'move-mode)
 
