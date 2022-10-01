@@ -38,7 +38,7 @@
   (let ((table (make-syntax-table)))
 
     ;; Operators
-    (dolist (op '(?+ ?- ?* ?/ ?% ?& ?^ ?| ?< ?> ?!))
+    (dolist (op '(?+ ?- ?* ?/ ?% ?& ?^ ?| ?< ?> ?! ?&))
       (modify-syntax-entry op "." table))
 
     ;; Parentheses
@@ -77,8 +77,8 @@
 
 (defconst move-keywords
   '("abort" "acquires" "as" "break" "const" "continue" "copy" "else" "entry"
-    "friend" "fun" "has" "if" "invariant" "let" "loop" "module" "move" "native"
-    "public" "return" "script" "spec" "struct" "use" "while"))
+    "friend" "fun" "has" "if" "invariant" "let" "loop" "module" "move" "mut"
+    "native" "public" "return" "script" "spec" "struct" "use" "while"))
 
 (defconst move-integer-types
   '("u8" "u64" "u128"))
