@@ -97,6 +97,7 @@
 (defvar move-mode-font-lock-keywords
   `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
     (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)
+    ("\\(#\\[[^]]*\\]\\)"                      1 font-lock-preprocessor-face keep)
     (,move-integer-with-type-re                1 font-lock-type-face)
     (eval move--register-builtin-functions)))
 
