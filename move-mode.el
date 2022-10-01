@@ -48,8 +48,12 @@
     "fun" "has" "if" "invariant" "let" "loop" "module" "move" "native" "public"
     "return" "script" "spec" "struct" "use" "while"))
 
+(defconst move-builtin-types
+  '("address" "bool" "u8" "u64" "u128" "vector"))
+
 (defvar move-mode-font-lock-keywords
-  `(,(regexp-opt move-keywords 'symbols)))
+  `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
+    (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)))
 
 (provide 'move-mode)
 
