@@ -104,7 +104,7 @@
     (,move-integer-with-type-re                1 font-lock-type-face)
 
     ;; Fields, function params, local variables with explicit types
-    (,(concat "\\(" move-ident-re "\\)" "[[:space:]]*:[^:]")
+    (,(concat "\\(" move-ident-re "\\)\\s-*:[^:]")
      1 font-lock-variable-name-face)
 
     ;; Let bindings with inferred type
