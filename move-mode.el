@@ -24,7 +24,7 @@
 ;;; Constants for use with Customization
 
 (defconst core-move-builtin-functions
-  '("assert" "borrow_global" "freeze" "move_from" "move_to")
+  '("assert!" "borrow_global" "freeze" "move_from" "move_to")
   "Built-in functions from Core Move")
 
 ;;; Customization
@@ -85,7 +85,12 @@
                 nil ;; SYNTAX-ALIST
                 ;;;;;; VARIABLES
                 (font-lock-syntactic-face-function
-                 . move-mode-distinguish-comments))))
+                 . move-mode-distinguish-comments)))
+
+  ;; ! is punctuation unless it's at the end of a word, in which case,
+  ;; it should be treated like piece of the word preceding word.
+  (setq-local syntax-propertize-function
+              (syntax-propertize-rules ("\\sw\\(!\\)" (1 "w")))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.move\\'" . move-mode))
