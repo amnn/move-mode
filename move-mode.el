@@ -21,6 +21,12 @@
 
 
 
+;;; Constants for use with Customization
+
+(defconst core-move-builtin-functions
+  '("assert" "borrow_global" "freeze" "move_from" "move_to")
+  "Built-in functions from Core Move")
+
 ;;; Customization
 
 (defgroup move-mode nil
@@ -29,7 +35,7 @@
   :group 'languages)
 
 (defcustom move-builtins
-  '("assert" "borrow_global" "freeze" "move_from" "move_to")
+  core-move-builtin-functions
   "Functions to highlight as builtins (mutations require restarting font-lock)."
   :type '(list string)
   :group 'move-mode)
