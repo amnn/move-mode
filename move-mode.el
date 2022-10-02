@@ -164,6 +164,17 @@
 
      ,move-generic-constraint-matcher)
 
+    ("\\_<has\\_>"
+
+     (,(regexp-opt move-abilities 'symbols)
+      (save-excursion
+        (re-search-forward "{" (point-at-eol) t +1)
+        (point))
+
+      nil
+
+      (0 font-lock-type-face)))
+
     (eval move--register-builtin-functions)))
 
 (defun move-mode-distinguish-comments (state)
