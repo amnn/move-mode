@@ -4,7 +4,7 @@
 
 ;; Author: Ashok Menon
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "24.1"))
+;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: languages
 
 ;;; License:
@@ -34,6 +34,12 @@
   :link '(url-link "https://github.com/move-language/move")
   :group 'languages)
 
+(defcustom move-indent-offset 4
+  "Number of spaces to indent move code by."
+  :type  'integer
+  :group 'rust-mode
+  :safe #'integerp)
+
 (defcustom move-builtins
   core-move-builtin-functions
   "Functions to highlight as builtins (mutations require restarting font-lock)."
@@ -54,6 +60,12 @@
     (modify-syntax-entry ?\}  "){" table)
     (modify-syntax-entry ?\[  "(]" table)
     (modify-syntax-entry ?\]  ")[" table)
+
+    ;; Special-case parenthetical, to capture the idea that every assignment
+    ;; needs to be closed by a semi-colon -- this adds support for idented
+    ;; continuation lines for assignments.
+    (modify-syntax-entry ?\=  "(;"  table)
+    (modify-syntax-entry ?\;  ")\n" table)
 
     ;; Comments
     (modify-syntax-entry ?/   ". 124b" table)
@@ -90,7 +102,13 @@
   ;; ! is punctuation unless it's at the end of a word, in which case,
   ;; it should be treated like piece of the preceding word.
   (setq-local syntax-propertize-function
-              (syntax-propertize-rules ("\\sw\\(!\\)" (1 "w")))))
+              (syntax-propertize-rules ("\\sw\\(!\\)" (1 "w"))))
+
+  ;; Indentation
+  (setq-local indent-line-function 'move-mode-indent-line)
+  (setq-local electric-indent-chars
+              (cons ?} (and (boundp 'electric-indent-chars)
+                            electric-indent-chars))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.move\\'" . move-mode))
@@ -207,10 +225,58 @@
            'font-lock-doc-face)
           ('font-lock-comment-face))))
 
+(defun move-mode-indent-line ()
+  "Sets the indent of the current line to the column calculated by
+   MOVE--INDENT-COLUMN, jumping to that column if the point is currently before
+   it, and leaving the point in place otherwise."
+  (interactive)
+  (when-let ((indent (move--indent-column)))
+    ;; Jump to indentation column if the point is currently before it.
+    (if (<= (current-column) (current-indentation))
+        (indent-line-to indent)
+      (save-excursion
+        (indent-line-to indent)))))
+
 (defun move--register-builtins ()
   "Generate a font-lock MATCHER form for built-in constructs, specified via the
    MOVE-BUILTINS custom variable."
   `(,(regexp-opt move-builtins 'symbols) . font-lock-builtin-face))
+
+(defun move--ppss-inner-paren () (nth 1 (syntax-ppss)))
+(defun move--ppss-in-comment  () (nth 4 (syntax-ppss)))
+
+(defun move--indent-column ()
+  "Calculates the column to indent the current line to.  The default indent is
+   MOVE-INDENT-OFFSET greater than the indent of the line containing the
+   innermost parenthesis at point, or 0 if there is no such innermost paren.
+
+   This column is modified for closing parens, which are dedented by the offset,
+   continuation lines of `/*'-style comments, which are indented by 1 to line up
+   their `*', and assignment continuation lines, which are indented by a further
+   offset."
+  (save-excursion
+    (back-to-indentation)
+    (let ((default-indent
+           (if-let ((parent-paren (move--ppss-inner-paren)))
+               (save-excursion
+                 (goto-char parent-paren)
+                 (back-to-indentation)
+                 (+ (current-column) move-indent-offset))
+             0)))
+      (cond
+       ;; `/*'-style comment continuation lines
+       ((and (move--ppss-in-comment)
+             (looking-at "*"))
+        (+ default-indent 1))
+
+       ;; Top-level items will remain completely unindented.
+       ((= default-indent 0) 0)
+
+       ;; Closing parentheses
+       ((looking-at "[]})]")
+        (- default-indent move-indent-offset))
+
+       (t default-indent)))))
 
 (provide 'move-mode)
 
