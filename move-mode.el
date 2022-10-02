@@ -206,7 +206,7 @@
 (defun move--register-builtins ()
   "Generate a font-lock MATCHER form for built-in constructs, specified via the
    MOVE-BUILTINS custom variable."
-  `(,(regexp-opt move-builtin-functions 'symbols) . font-lock-builtin-face))
+  `(,(regexp-opt move-builtins 'symbols) . font-lock-builtin-face))
 
 (provide 'move-mode)
 
