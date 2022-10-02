@@ -113,15 +113,16 @@
 (defconst move-type-re
   "\\_<[A-Z][a-zA-Z0-9_]*\\_>")
 
+(defconst move-limit-by-<>-form
+  '(if (not (char-equal ?< (char-after))) (point)
+       (with-syntax-table move-mode-syntax-table+<>
+         (save-excursion (forward-sexp) (point))))
+  "Form that, when evaluated, with the point over an open angled bracket,
+   returns the position one after the matching close angled bracket.")
+
 (defconst move-generic-constraint-matcher
   `(,(regexp-opt move-abilities 'symbols)
-
-    (if (not (char-equal ?< (char-after))) (point)
-      (with-syntax-table move-mode-syntax-table+<>
-        (save-excursion (forward-char) (up-list) (point))))
-
-    nil
-
+    ,move-limit-by-<>-form nil
     (0 font-lock-type-face))
   "Font lock sub-matcher for type constraints on generic type parameters,
    enclosed by angle brackets.")
@@ -154,6 +155,13 @@
     ;; Struct declarations
     (,(concat "\\_<struct\\s-+\\(" move-ident-re "\\)\\s-*")
      (1 font-lock-type-face)
+
+     ("\\_<phantom\\_>"
+      ,move-limit-by-<>-form
+      (with-syntax-table move-mode-syntax-table+<>
+        (up-list) (backward-list))
+      (0 font-lock-keyword-face))
+
      ,move-generic-constraint-matcher)
 
     (eval move--register-builtin-functions)))
