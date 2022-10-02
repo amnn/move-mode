@@ -42,12 +42,12 @@
       (modify-syntax-entry op "." table))
 
     ;; Parentheses
-    (modify-syntax-entry ?(   "()" table)
-    (modify-syntax-entry ?)   ")(" table)
-    (modify-syntax-entry ?{   "(}" table)
-    (modify-syntax-entry ?}   "){" table)
-    (modify-syntax-entry ?[   "(]" table)
-    (modify-syntax-entry ?]   ")[" table)
+    (modify-syntax-entry ?\(  "()" table)
+    (modify-syntax-entry ?\)  ")(" table)
+    (modify-syntax-entry ?\{  "(}" table)
+    (modify-syntax-entry ?\}  "){" table)
+    (modify-syntax-entry ?\[  "(]" table)
+    (modify-syntax-entry ?\]  ")[" table)
 
     ;; Comments
     (modify-syntax-entry ?/   ". 124b" table)
