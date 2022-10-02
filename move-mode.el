@@ -113,6 +113,19 @@
 (defconst move-type-re
   "\\_<[A-Z][a-zA-Z0-9_]*\\_>")
 
+(defconst move-generic-constraint-matcher
+  `(,(regexp-opt move-abilities 'symbols)
+
+    (if (not (char-equal ?< (char-after))) (point)
+      (with-syntax-table move-mode-syntax-table+<>
+        (save-excursion (forward-char) (up-list) (point))))
+
+    nil
+
+    (0 font-lock-type-face))
+  "Font lock sub-matcher for type constraints on generic type parameters,
+   enclosed by angle brackets.")
+
 (defvar move-mode-font-lock-keywords
   `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
     (,(regexp-opt move-builtin-types 'symbols) . font-lock-type-face)
@@ -136,19 +149,12 @@
     ;; Function declarations
     (,(concat "\\_<fun\\s-+\\(" move-ident-re "\\)\\s-*")
      (1 font-lock-function-name-face)
-     (,(regexp-opt move-abilities 'symbols)
-
-      (if (not (char-equal ?< (char-after))) (point)
-        (with-syntax-table move-mode-syntax-table+<>
-          (save-excursion (forward-char) (up-list) (point))))
-
-      nil
-
-      (0 font-lock-type-face)))
+     ,move-generic-constraint-matcher)
 
     ;; Struct declarations
-    (,(concat "\\_<struct\\s-+\\(" move-ident-re "\\)")
-     1 font-lock-type-face)
+    (,(concat "\\_<struct\\s-+\\(" move-ident-re "\\)\\s-*")
+     (1 font-lock-type-face)
+     ,move-generic-constraint-matcher)
 
     (eval move--register-builtin-functions)))
 
