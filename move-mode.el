@@ -61,12 +61,6 @@
     (modify-syntax-entry ?\[  "(]" table)
     (modify-syntax-entry ?\]  ")[" table)
 
-    ;; Special-case parenthetical, to capture the idea that every assignment
-    ;; needs to be closed by a semi-colon -- this adds support for idented
-    ;; continuation lines for assignments.
-    (modify-syntax-entry ?\=  "(;"  table)
-    (modify-syntax-entry ?\;  ")\n" table)
-
     ;; Comments
     (modify-syntax-entry ?/   ". 124b" table)
     (modify-syntax-entry ?*   ". 23n"  table)
@@ -245,6 +239,24 @@
 (defun move--ppss-inner-paren () (nth 1 (syntax-ppss)))
 (defun move--ppss-in-comment  () (nth 4 (syntax-ppss)))
 
+(defun move--prev-assignment (bound)
+  "Search backwards from the current point until BOUND looking for an `='
+   character that isn't in a comment.  Returns `t' on success, with the point
+   over the character, and `nil' otherwise with the point at an indeterminate
+   position."
+  (and (search-backward "=" bound t)
+       (or (not (move--ppss-in-comment))
+           (move--prev-assignment bound))))
+
+(defun move--next-terminator (bound)
+  "Search forwards from the current point until BOUND looking for a `;'
+   character that isn't in a comment.  Returns `t' on success, with the point
+   over the character, and `nil' otherwise with the point at an indeterminate
+   position."
+  (and (search-forward ";" bound t)
+       (or (not (move--ppss-in-comment))
+           (move--next-terminator bound)))) 
+
 (defun move--indent-column ()
   "Calculates the column to indent the current line to.  The default indent is
    MOVE-INDENT-OFFSET greater than the indent of the line containing the
@@ -256,13 +268,13 @@
    offset."
   (save-excursion
     (back-to-indentation)
-    (let ((default-indent
-           (if-let ((parent-paren (move--ppss-inner-paren)))
-               (save-excursion
-                 (goto-char parent-paren)
-                 (back-to-indentation)
-                 (+ (current-column) move-indent-offset))
-             0)))
+    (let* ((current-posn   (point))
+           (parent-paren   (move--ppss-inner-paren))
+           (default-indent (if (not parent-paren) 0
+                             (save-excursion
+                               (goto-char parent-paren)
+                               (back-to-indentation)
+                               (+ (current-column) move-indent-offset)))))
       (cond
        ;; `/*'-style comment continuation lines
        ((and (move--ppss-in-comment)
@@ -275,6 +287,15 @@
        ;; Closing parentheses
        ((looking-at "[]})]")
         (- default-indent move-indent-offset))
+
+       ;; Assignment continuation lines
+       ((save-excursion
+          (and parent-paren
+               (save-excursion (goto-char parent-paren)
+                               (looking-at "{"))
+               (move--prev-assignment parent-paren)
+               (not (move--next-terminator current-posn))))
+        (+ default-indent move-indent-offset))
 
        (t default-indent)))))
 
