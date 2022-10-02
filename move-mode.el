@@ -98,11 +98,37 @@
   (setq-local syntax-propertize-function
               (syntax-propertize-rules ("\\sw\\(!\\)" (1 "w"))))
 
+  ;; This is a weirdly lisp-specific variable
+  (setq-local open-paren-in-column-0-is-defun-start nil)
+
   ;; Indentation
   (setq-local indent-line-function 'move-mode-indent-line)
   (setq-local electric-indent-chars
               (cons ?} (and (boundp 'electric-indent-chars)
-                            electric-indent-chars))))
+                            electric-indent-chars)))
+
+  ;; Comments
+  (setq-local comment-end        "")
+  (setq-local comment-line-break-function #'move-mode-comment-line-break)
+  (setq-local comment-multi-line t)
+  (setq-local comment-start      "// ")
+  (setq-local comment-start-skip "\\(?://[/!]*\\|/\\*[*!]?\\)\\s-*")
+
+  ;; Set paragraph-start to stop multi-line comments creeping up onto
+  ;; an empty initial line, or across lines that contain only a `*'
+  ;; and are therefore effectively empty.
+  (setq-local paragraph-start
+              (concat "\\s-*\\(?:" comment-start-skip ;; Comment start
+                      "\\|\\*/?[[:space:]]*"          ;; Empty line in a comment
+                      "\\|\\)$"))                     ;; Just plain empty
+  (setq-local paragraph-separate
+              paragraph-start)
+
+  ;; Fill Paragraph
+  (setq-local fill-paragraph-function   #'move-mode-fill-paragraph)
+  (setq-local normal-auto-fill-function #'move-mode-auto-fill)
+  (setq-local adaptive-fill-function    #'move-mode-adaptive-fill)
+  (setq-local adaptive-fill-first-line-regexp ""))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.move\\'" . move-mode))
@@ -231,13 +257,55 @@
       (save-excursion
         (indent-line-to indent)))))
 
+(defun move-mode-comment-line-break (&optional arg)
+  "Create a new line continuing the comment at point."
+  (let ((fill-prefix (move-mode-adaptive-fill)))
+    (comment-indent-new-line arg)))
+
+(defun move-mode-fill-paragraph (&rest args)
+  "Move comment-aware wrapper for `fill-paragraph'."
+  (let ((fill-prefix (move-mode-adaptive-fill))
+        (fill-paragraph-handle-comment t)
+        (fill-paragraph-function
+         (unless (eq fill-paragraph-function #'move-mode-fill-paragraph)
+           fill-paragraph-function)))
+    (apply #'fill-paragraph args) t))
+
+(defun move-mode-auto-fill (&rest args)
+  "Move comment-aware wrapper for `do-auto-fill'."
+  (let ((fill-prefix (move-mode-adaptive-fill)))
+    (apply #'do-auto-fill args) t))
+
+(defun move-mode-adaptive-fill ()
+  "If the point is currently in a comment, return the fill prefix to use to
+   continue that comment, otherwise return the existing FILL-PREFIX."
+  (save-match-data
+    (save-excursion
+      (if (not (move--ppss-in-comment))
+          fill-prefix
+        (let* ((comment-start
+                (move--ppss-comment-start))
+               (comment-indent
+                (progn (goto-char comment-start)
+                       (beginning-of-line)
+                       (buffer-substring-no-properties
+                        (point) comment-start))))
+          (goto-char comment-start)
+          (cond
+           ((looking-at "//[/!]*\\s-*")
+            (concat comment-indent (match-string-no-properties 0)))
+           ((looking-at "/\\*[*!]?\\s-*")
+            (concat comment-indent " * "))
+           (t fill-prefix)))))))
+
 (defun move--register-builtins ()
   "Generate a font-lock MATCHER form for built-in constructs, specified via the
    MOVE-BUILTINS custom variable."
   `(,(regexp-opt move-builtins 'symbols) . font-lock-builtin-face))
 
-(defun move--ppss-inner-paren () (nth 1 (syntax-ppss)))
-(defun move--ppss-in-comment  () (nth 4 (syntax-ppss)))
+(defun move--ppss-inner-paren   () (nth 1 (syntax-ppss)))
+(defun move--ppss-in-comment    () (nth 4 (syntax-ppss)))
+(defun move--ppss-comment-start () (nth 8 (syntax-ppss)))
 
 (defun move--prev-assignment (bound)
   "Search backwards from the current point until BOUND looking for an `='
