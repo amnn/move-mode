@@ -29,7 +29,7 @@
   :group 'languages)
 
 (defcustom move-builtin-functions
-  '("assert" "borrow_global" "exists" "freeze" "move_from" "move_to" "old")
+  '("assert" "borrow_global" "freeze" "move_from" "move_to" "old")
   "Functions to highlight as builtins (mutations require restarting font-lock)."
   :type '(list string)
   :group 'move-mode)
@@ -89,6 +89,12 @@
     "false" "friend" "fun" "has" "if" "invariant" "let" "loop" "module" "move"
     "mut" "native" "public" "return" "script" "spec" "struct" "true" "use"
     "while"))
+
+(defconst move-prover-keywords
+  '("aborts_if" "aborts_with" "apply" "assume" "axiom" "choose" "decreases"
+    "ensures" "emits" "except" "exists" "forall" "global" "include" "internal"
+    "local" "min" "modifies" "post" "pragma" "requires" "schema" "succeeds_if"
+    "to" "update" "with" "where"))
 
 (defconst move-integer-types
   '("u8" "u64" "u128"))
@@ -174,6 +180,10 @@
       nil
 
       (0 font-lock-type-face)))
+
+    ;; Move Prover keywords (low down in the keyword precedence order because
+    ;; they are contextual).
+    (,(regexp-opt move-prover-keywords 'symbols) . font-lock-keyword-face)
 
     (eval move--register-builtin-functions)))
 
