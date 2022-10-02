@@ -28,8 +28,8 @@
   :link '(url-link "https://github.com/move-language/move")
   :group 'languages)
 
-(defcustom move-builtin-functions
-  '("assert" "borrow_global" "freeze" "move_from" "move_to" "old")
+(defcustom move-builtins
+  '("assert" "borrow_global" "freeze" "move_from" "move_to")
   "Functions to highlight as builtins (mutations require restarting font-lock)."
   :type '(list string)
   :group 'move-mode)
@@ -93,8 +93,11 @@
 (defconst move-prover-keywords
   '("aborts_if" "aborts_with" "apply" "assume" "axiom" "choose" "decreases"
     "ensures" "emits" "except" "exists" "forall" "global" "include" "internal"
-    "local" "min" "modifies" "post" "pragma" "requires" "schema" "succeeds_if"
-    "to" "update" "with" "where"))
+    "local" "min" "modifies" "old" "post" "pragma" "requires" "schema"
+    "succeeds_if" "to" "update" "with" "where")
+  "Keywords that are only used by the move-prover.  Can be added to
+   MOVE-BUILTINS to enable highlighting, defaults to not."
+  )
 
 (defconst move-integer-types
   '("u8" "u64" "u128"))
@@ -181,11 +184,7 @@
 
       (0 font-lock-type-face)))
 
-    ;; Move Prover keywords (low down in the keyword precedence order because
-    ;; they are contextual).
-    (,(regexp-opt move-prover-keywords 'symbols) . font-lock-keyword-face)
-
-    (eval move--register-builtin-functions)))
+    (eval move--register-builtins)))
 
 (defun move-mode-distinguish-comments (state)
   "Distinguish between doc comments and normal comments in the given syntax
@@ -198,9 +197,9 @@
            'font-lock-doc-face)
           ('font-lock-comment-face))))
 
-(defun move--register-builtin-functions ()
-  "Generate a font-lock MATCHER form for built-in functions, specified via the
-   MOVE-BUILTIN-FUNCTIONS custom variable."
+(defun move--register-builtins ()
+  "Generate a font-lock MATCHER form for built-in constructs, specified via the
+   MOVE-BUILTINS custom variable."
   `(,(regexp-opt move-builtin-functions 'symbols) . font-lock-builtin-face))
 
 (provide 'move-mode)
