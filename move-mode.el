@@ -88,7 +88,7 @@
                  . move-mode-distinguish-comments)))
 
   ;; ! is punctuation unless it's at the end of a word, in which case,
-  ;; it should be treated like piece of the word preceding word.
+  ;; it should be treated like piece of the preceding word.
   (setq-local syntax-propertize-function
               (syntax-propertize-rules ("\\sw\\(!\\)" (1 "w")))))
 
@@ -107,8 +107,7 @@
     "local" "min" "modifies" "old" "post" "pragma" "requires" "schema"
     "succeeds_if" "to" "update" "with" "where")
   "Keywords that are only used by the move-prover.  Can be added to
-   MOVE-BUILTINS to enable highlighting, defaults to not."
-  )
+   MOVE-BUILTINS to enable highlighting, defaults to not.")
 
 (defconst move-integer-types
   '("u8" "u64" "u128"))
