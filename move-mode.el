@@ -34,7 +34,7 @@
   :type '(list string)
   :group 'move-mode)
 
-(defvar move-mode-syntax-table
+(defconst move-mode-syntax-table
   (let ((table (make-syntax-table)))
 
     ;; Operators
@@ -56,6 +56,15 @@
     (modify-syntax-entry ?\^m "> b"    table)
 
     table))
+
+(defconst move-mode-syntax-table+<>
+  (let ((table (copy-syntax-table move-mode-syntax-table)))
+    (modify-syntax-entry ?< "(>" table)
+    (modify-syntax-entry ?> ")<" table)
+
+    table)
+  "A variant of the syntax table that recognises angle braces as a bracketed
+   construct, for use in detecting generic parameters")
 
 ;;;###autoload
 (define-derived-mode move-mode prog-mode "Move"
@@ -86,6 +95,9 @@
 
 (defconst move-builtin-types
   (append move-integer-types '("address" "bool" "vector")))
+
+(defconst move-abilities
+  '("copy" "drop" "store" "key"))
 
 (defconst move-integer-with-type-re
   (eval-when-compile
@@ -122,8 +134,17 @@
      1 font-lock-variable-name-face)
 
     ;; Function declarations
-    (,(concat "\\_<fun\\s-+\\(" move-ident-re "\\)")
-     1 font-lock-function-name-face)
+    (,(concat "\\_<fun\\s-+\\(" move-ident-re "\\)\\s-*")
+     (1 font-lock-function-name-face)
+     (,(regexp-opt move-abilities 'symbols)
+
+      (if (not (char-equal ?< (char-after))) (point)
+        (with-syntax-table move-mode-syntax-table+<>
+          (save-excursion (forward-char) (up-list) (point))))
+
+      nil
+
+      (0 font-lock-type-face)))
 
     ;; Struct declarations
     (,(concat "\\_<struct\\s-+\\(" move-ident-re "\\)")
