@@ -40,10 +40,19 @@
   :group 'rust-mode
   :safe #'integerp)
 
-(defcustom move-builtins
-  core-move-builtin-functions
+(defcustom move-builtins core-move-builtin-functions
   "Functions to highlight as builtins (mutations require restarting font-lock)."
   :type '(list string)
+  :group 'move-mode)
+
+(defcustom move-bin "move"
+  "Name of or path to move CLI binary."
+  :type 'string
+  :group 'move-mode)
+
+(defcustom move-default-arguments ""
+  "Default arguments when running common move CLI commands."
+  :type 'string
   :group 'move-mode)
 
 (defconst move-mode-syntax-table
@@ -78,9 +87,22 @@
   "A variant of the syntax table that recognises angle braces as a bracketed
    construct, for use in detecting generic parameters")
 
+;; Keybindings
+
+(defvar move-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c C-b") 'move-build)
+    (define-key map (kbd "C-c C-c C-c") 'move-coverage)
+    (define-key map (kbd "C-c C-c C-d") 'move-disassemble)
+    (define-key map (kbd "C-c C-c C-p") 'move-prover)
+    (define-key map (kbd "C-c C-c C-t") 'move-test)
+    map))
+
 ;;;###autoload
 (define-derived-mode move-mode prog-mode "Move"
-  "Major mode for Move source code."
+  "Major mode for Move source code.
+
+\\{move-mode-map}"
   :group 'move-mode
   :syntax-table move-mode-syntax-table
 
@@ -234,6 +256,12 @@
 
     (eval move--register-builtins)))
 
+(defun move-build       () (interactive) (move--compile "build"))
+(defun move-coverage    () (interactive) (move--compile "coverage"))
+(defun move-disassemble () (interactive) (move--compile "disassemble"))
+(defun move-prover      () (interactive) (move--compile "prover"))
+(defun move-test        () (interactive) (move--compile "test"))
+
 (defun move-mode-distinguish-comments (state)
   "Distinguish between doc comments and normal comments in the given syntax
    STATE."
@@ -297,6 +325,13 @@
            ((looking-at "/\\*[*!]?\\s-*")
             (concat comment-indent " * "))
            (t fill-prefix)))))))
+
+(defun move--compile (sub-command)
+  "Find the Move project root for the current file, and run SUB-COMMAND of the
+   Move CLI on it, with MOVE-DEFAULT-ARGUMENTS."
+  (let ((default-directory (locate-dominating-file default-directory
+                                                   "Move.toml")))
+    (compile (concat move-bin " " sub-command " " move-default-arguments))))
 
 (defun move--register-builtins ()
   "Generate a font-lock MATCHER form for built-in constructs, specified via the
