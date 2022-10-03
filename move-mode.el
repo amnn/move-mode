@@ -4,7 +4,7 @@
 
 ;; Author: Ashok Menon
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: languages
 
 ;;; License:
@@ -330,10 +330,14 @@
 (defun move--compile (sub-command &rest args)
   "Find the Move project root for the current file, and run SUB-COMMAND of the
    Move CLI on it, with MOVE-DEFAULT-ARGUMENTS."
-  (let ((default-directory (locate-dominating-file default-directory
-                                                   "Move.toml")))
-    (compile (concat move-bin " " sub-command " " move-default-arguments
-                     " " (string-join args " ")))))
+  (let* ((default-directory
+           (locate-dominating-file default-directory "Move.toml"))
+         (compilation-buffer
+           (compile (concat move-bin " " sub-command " " move-default-arguments
+                            " " (string-join args " ")))))
+    (save-excursion
+      (set-buffer compilation-buffer)
+      (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter 0 t))))
 
 (defun move--register-builtins ()
   "Generate a font-lock MATCHER form for built-in constructs, specified via the
