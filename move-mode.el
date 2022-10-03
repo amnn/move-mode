@@ -92,7 +92,6 @@
 (defvar move-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c C-b") 'move-build)
-    (define-key map (kbd "C-c C-c C-c") 'move-coverage)
     (define-key map (kbd "C-c C-c C-d") 'move-disassemble)
     (define-key map (kbd "C-c C-c C-p") 'move-prover)
     (define-key map (kbd "C-c C-c C-t") 'move-test)
@@ -257,7 +256,6 @@
     (eval move--register-builtins)))
 
 (defun move-build       () (interactive) (move--compile "build"))
-(defun move-coverage    () (interactive) (move--compile "coverage"))
 (defun move-disassemble () (interactive) (move--compile "disassemble"))
 (defun move-prover      () (interactive) (move--compile "prover"))
 (defun move-test        () (interactive) (move--compile "test"))
