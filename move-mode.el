@@ -255,10 +255,13 @@
 
     (eval move--register-builtins)))
 
-(defun move-build       () (interactive) (move--compile "build"))
-(defun move-disassemble () (interactive) (move--compile "disassemble"))
-(defun move-prover      () (interactive) (move--compile "prover"))
-(defun move-test        () (interactive) (move--compile "test"))
+(defun move-build  () (interactive) (move--compile "build"))
+(defun move-prover () (interactive) (move--compile "prover"))
+(defun move-test   () (interactive) (move--compile "test"))
+
+(defun move-disassemble (module-name)
+  (interactive "sModule: ")
+  (move--compile "disassemble" "--name" module-name))
 
 (defun move-mode-distinguish-comments (state)
   "Distinguish between doc comments and normal comments in the given syntax
@@ -324,12 +327,13 @@
             (concat comment-indent " * "))
            (t fill-prefix)))))))
 
-(defun move--compile (sub-command)
+(defun move--compile (sub-command &rest args)
   "Find the Move project root for the current file, and run SUB-COMMAND of the
    Move CLI on it, with MOVE-DEFAULT-ARGUMENTS."
   (let ((default-directory (locate-dominating-file default-directory
                                                    "Move.toml")))
-    (compile (concat move-bin " " sub-command " " move-default-arguments))))
+    (compile (concat move-bin " " sub-command " " move-default-arguments
+                     " " (string-join args " ")))))
 
 (defun move--register-builtins ()
   "Generate a font-lock MATCHER form for built-in constructs, specified via the
