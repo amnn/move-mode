@@ -27,6 +27,14 @@
   '("assert!" "borrow_global" "freeze" "move_from" "move_to")
   "Built-in functions from Core Move")
 
+(defconst move-prover-keywords
+  '("aborts_if" "aborts_with" "apply" "assume" "axiom" "choose" "decreases"
+    "ensures" "emits" "except" "exists" "forall" "global" "include" "internal"
+    "local" "min" "modifies" "old" "post" "pragma" "requires" "schema"
+    "succeeds_if" "to" "update" "with" "where")
+  "Keywords that are only used by the move-prover.  Can be added to
+   MOVE-BUILTINS to enable highlighting, defaults to not.")
+
 ;;; Customization
 
 (defgroup move-mode nil
@@ -159,14 +167,6 @@
     "false" "friend" "fun" "has" "if" "invariant" "let" "loop" "module" "move"
     "mut" "native" "public" "return" "script" "spec" "struct" "true" "use"
     "while"))
-
-(defconst move-prover-keywords
-  '("aborts_if" "aborts_with" "apply" "assume" "axiom" "choose" "decreases"
-    "ensures" "emits" "except" "exists" "forall" "global" "include" "internal"
-    "local" "min" "modifies" "old" "post" "pragma" "requires" "schema"
-    "succeeds_if" "to" "update" "with" "where")
-  "Keywords that are only used by the move-prover.  Can be added to
-   MOVE-BUILTINS to enable highlighting, defaults to not.")
 
 (defconst move-integer-types
   '("u8" "u64" "u128"))
