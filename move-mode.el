@@ -4,7 +4,7 @@
 
 ;; Author: Ashok Menon
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: languages
 
 ;;; License:
@@ -279,12 +279,12 @@
    MOVE--INDENT-COLUMN, jumping to that column if the point is currently before
    it, and leaving the point in place otherwise."
   (interactive)
-  (when-let ((indent (move--indent-column)))
-    ;; Jump to indentation column if the point is currently before it.
-    (if (<= (current-column) (current-indentation))
-        (indent-line-to indent)
-      (save-excursion
-        (indent-line-to indent)))))
+  (let ((indent (move--indent-column)))
+    (when indent
+      (if (<= (current-column) (current-indentation))
+          (indent-line-to indent)
+        (save-excursion
+          (indent-line-to indent))))))
 
 (defun move-mode-comment-line-break (&optional arg)
   "Create a new line continuing the comment at point."
@@ -333,11 +333,15 @@
   (let* ((default-directory
            (locate-dominating-file default-directory "Move.toml"))
          (compilation-buffer
-           (compile (concat move-bin " " sub-command " " move-default-arguments
-                            " " (string-join args " ")))))
+           (compile
+            (combine-and-quote-strings
+             (append (list move-bin sub-command)
+                     (split-string-and-unquote move-default-arguments)
+                     args)))))
     (save-excursion
       (set-buffer compilation-buffer)
-      (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter 0 t))))
+      (add-hook 'compilation-filter-hook
+                'move--ansi-color-compilation-filter 0 t))))
 
 (defun move--register-builtins ()
   "Generate a font-lock MATCHER form for built-in constructs, specified via the
@@ -407,6 +411,11 @@
         (+ default-indent move-indent-offset))
 
        (t default-indent)))))
+
+(defun move--ansi-color-compilation-filter ()
+  "Backport ANSI color compilation filter to support earlier versions of Emacs."
+  (let ((inhibit-read-only t))
+    (ansi-color-apply-on-region compilation-filter-start (point))))
 
 (provide 'move-mode)
 

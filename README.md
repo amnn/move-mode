@@ -2,7 +2,8 @@
 
 `move-mode` is an Emacs major-mode for editing smart contracts written
 in the [Move](https://github.com/move-language/move) programming
-language.  It currently supports Emacs 28.1 and above.
+language.  Supports Emacs 25.1 and above (tested on Emacs for Mac OS X
+25.1-1, Emacs Mac Port 28.1).
 
 There are multiple flavors of Move (Core Move, Sui Move, etc).  This
 mode aims to be agnostic to the flavor of Move you are writing in by

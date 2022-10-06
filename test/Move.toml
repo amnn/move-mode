@@ -1,0 +1,8 @@
+[package]
+name = "Example"
+version = "0.1.0"
+
+[addresses]
+std     = "0x0"
+acme    = "0x1"
+example = "0x2"
