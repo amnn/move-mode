@@ -153,6 +153,29 @@ allow Eglot to find projects by looking for `Move.toml`:
 
 NOTE: This will not affect finding project files outside of the LSP.
 
+### [Lsp mode](https://emacs-lsp.github.io/lsp-mode/)
+
+Once `move-analyzer` is installed, tell `lsp-mode` how to find the
+executable:
+
+``` emacs-lisp
+(with-eval-after-load 'lsp-mode
+  (add-to-list 'lsp-language-id-configuration '(move-mode . "move"))
+  (defcustom lsp-move-executable "move-analyzer"
+    "Command to start the Move language server."
+    :group 'lsp-move
+    :risky t
+    :type 'file)
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-stdio-connection (lambda () lsp-move-executable))
+    :activation-fn (lsp-activate-on "move")
+    :priority -1
+    :server-id 'move-analyzer))
+  )
+)
+```
+
 ## Contributing
 
 Contributions are very welcome! If you notice a bug, try updating
