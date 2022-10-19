@@ -161,19 +161,12 @@ executable:
 ``` emacs-lisp
 (with-eval-after-load 'lsp-mode
   (add-to-list 'lsp-language-id-configuration '(move-mode . "move"))
-  (defcustom lsp-move-executable "move-analyzer"
-    "Command to start the Move language server."
-    :group 'lsp-move
-    :risky t
-    :type 'file)
   (lsp-register-client
    (make-lsp-client
-    :new-connection (lsp-stdio-connection (lambda () lsp-move-executable))
+    :new-connection (lsp-stdio-connection "move-analyzer")
     :activation-fn (lsp-activate-on "move")
     :priority -1
-    :server-id 'move-analyzer))
-  )
-)
+    :server-id 'move-analyzer))))
 ```
 
 ## Contributing
