@@ -119,7 +119,11 @@ $ cargo install --git https://github.com/move-language/move move-analyzer
 ```
 
 It can be modified using `--feature` flags passed to the `install`
-command above.  A full list of supported features can be found in the
+command above. The two most common ones are:
+- `--features "address20"` option for Move flavors requiring 20-byte long addresses (e.g., Sui Move)
+- `--features "address32"` option for Move flavors requiring 32-byte long addresses (e.g., Aptos Move)
+
+A full list of supported features can be found in the
 `[features]` section of
 [its Cargo.toml](https://github.com/move-language/move/blob/main/language/move-analyzer/Cargo.toml).
 
