@@ -169,7 +169,7 @@
     "while"))
 
 (defconst move-integer-types
-  '("u8" "u64" "u128"))
+  '("u8" "u16" "u32" "u64" "u128" "u256"))
 
 (defconst move-builtin-types
   (append move-integer-types '("address" "bool" "vector")))
