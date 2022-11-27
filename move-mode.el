@@ -3,6 +3,7 @@
 ;; Copyright (c) 2022 Ashok Menon
 
 ;; Author: Ashok Menon
+;; URL: https://github.com/amnn/move-mode
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: languages
@@ -21,23 +22,26 @@
 
 
 
+(require 'compile)
+
 ;;; Constants for use with Customization =================================== ;;;
 
-(defconst core-move-builtin-functions
+(defconst move-core-builtin-functions
   '("assert!" "borrow_global" "freeze" "move_from" "move_to")
-  "Built-in functions from Core Move")
+  "Built-in functions from Core Move.")
 
 (defconst move-prover-keywords
   '("aborts_if" "aborts_with" "apply" "assume" "axiom" "choose" "decreases"
     "ensures" "emits" "except" "exists" "forall" "global" "include" "internal"
     "local" "min" "modifies" "old" "post" "pragma" "requires" "schema"
     "succeeds_if" "to" "update" "with" "where")
-  "Keywords that are only used by the move-prover.  Can be added to
-   MOVE-BUILTINS to enable highlighting, defaults to not.")
+  "Keywords that are only used by the move prover.
+
+Can be added to MOVE-BUILTINS to enable highlighting, defaults to not.")
 
 ;;; Customization ========================================================== ;;;
 
-(defgroup move-mode nil
+(defgroup move-lang nil
   "Support for Move source code."
   :link '(url-link "https://github.com/move-language/move")
   :group 'languages)
@@ -48,57 +52,57 @@
   :group 'rust-mode
   :safe #'integerp)
 
-(defcustom move-builtins core-move-builtin-functions
+(defcustom move-builtins move-core-builtin-functions
   "Functions to highlight as builtins (mutations require restarting font-lock)."
   :type '(list string)
-  :group 'move-mode)
+  :group 'move-lang)
 
 (defcustom move-bin "move"
   "Name of or path to move CLI binary."
   :type 'string
-  :group 'move-mode)
+  :group 'move-lang)
 
 (defcustom move-default-arguments ""
   "Default arguments when running common move CLI commands."
   :type 'string
-  :group 'move-mode)
+  :group 'move-lang)
 
 ;;; Faces ================================================================== ;;;
 
 (defface move-compilation-message-face
   '((t :inherit default))
-  "`move-compilation-mode'-specific override of `compilation-message-face' that
-   inherits from `default' face to avoid interfering with the ANSI colour
-   filter."
-  :group 'move-mode)
+  "`move-compilation-mode'-specific override of `compilation-message-face'.
+
+Inherits from `default' face to avoid interfering with the ANSI colour filter."
+  :group 'move-lang)
 
 (defface move-compilation-error-face
   '((t :inherit default))
-  "`move-compilation-mode'-specific override of `compilation-error-face' that
-   inherits from `default' face to avoid interfering with the ANSI colour
-   filter."
-  :group 'move-mode)
+  "`move-compilation-mode'-specific override of `compilation-error-face'.
+
+Inherits from `default' face to avoid interfering with the ANSI colour filter."
+  :group 'move-lang)
 
 (defface move-compilation-warning-face
   '((t :inherit default))
-  "`move-compilation-mode'-specific override of `compilation-warning-face' that
-   inherits from `default' face to avoid interfering with the ANSI colour
-   filter."
-  :group 'move-mode)
+  "`move-compilation-mode'-specific override of `compilation-warning-face'.
+
+Inherits from `default' face to avoid interfering with the ANSI colour filter."
+  :group 'move-lang)
 
 (defface move-compilation-line-face
   '((t :inherit default))
-  "`move-compilation-mode'-specific override of `compilation-line-face' that
-   inherits from `default' face to avoid interfering with the ANSI colour
-   filter."
-  :group 'move-mode)
+  "`move-compilation-mode'-specific override of `compilation-line-face'.
+
+Inherits from `default' face to avoid interfering with the ANSI colour filter."
+  :group 'move-lang)
 
 (defface move-compilation-column-face
   '((t :inherit default))
-  "`move-compilation-mode'-specific override of `compilation-column-face' that
-   inherits from `default' face to avoid interfering with the ANSI colour
-   filter."
-  :group 'move-mode)
+  "`move-compilation-mode'-specific override of `compilation-column-face'.
+
+Inherits from `default' face to avoid interfering with the ANSI colour filter."
+  :group 'move-lang)
 
 ;;; Syntax ================================================================= ;;;
 
@@ -131,8 +135,9 @@
     (modify-syntax-entry ?> ")<" table)
 
     table)
-  "A variant of the syntax table that recognises angle braces as a bracketed
-   construct, for use in detecting generic parameters")
+  "Variant of syntax table recognising angle braces as bracketed.
+
+For use in detecting generic paramters.")
 
 ;;; Keybindings ============================================================ ;;;
 
@@ -144,6 +149,28 @@
     (define-key map (kbd "C-c C-c C-t") 'move-test)
     map))
 
+;;; Compilation ============================================================ ;;;
+
+(defvar move-error-pattern
+  (let* ((err  "error\\[E[0-9]+\\]:\s[^\n]+")
+         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
+         (file "\\([^\n]+\\)")
+         (line "\\([0-9]+\\)")
+         (col  "\\([0-9]+\\)")
+         (patt (concat err "\n" box file ":" line ":" col)))
+    (list patt 'move--expand-compilation-source 2 3 0))
+  "Link to sources for compilation errors.")
+
+(defvar move-warning-pattern
+  (let* ((warn "warning\\[W[0-9]+\\]:\s[^\n]+")
+         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
+         (file "\\([^\n]+\\)")
+         (line "\\([0-9]+\\)")
+         (col  "\\([0-9]+\\)")
+         (patt (concat warn "\n" box file ":" line ":" col)))
+    (list patt 'move--expand-compilation-source 2 3 1))
+  "Link to sources for compilation warnings.")
+
 ;;; Modes ================================================================== ;;;
 
 ;;;###autoload
@@ -151,7 +178,7 @@
   "Major mode for Move source code.
 
 \\{move-mode-map}"
-  :group 'move-mode
+  :group 'move-lang
   :syntax-table move-mode-syntax-table
 
   (setq-local font-lock-defaults
@@ -244,12 +271,11 @@ Defines regexps for matching file names in compiler output, replacing defaults."
   '("copy" "drop" "store" "key"))
 
 (defconst move-integer-with-type-re
-  (eval-when-compile
-    (concat "\\_<"
-            "\\(?:0x?\\|[1-9]\\)"
-            "[[:digit:]a-fA-F]*"
-            (regexp-opt move-integer-types t)
-            "\\_>")))
+  (concat "\\_<"
+          "\\(?:0x?\\|[1-9]\\)"
+          "[[:digit:]a-fA-F]*"
+          (regexp-opt move-integer-types t)
+          "\\_>"))
 
 (defconst move-ident-re
   "[a-zA-Z][a-zA-Z0-9_]*\\|_[a-zA-Z0-9_]+")
@@ -261,15 +287,17 @@ Defines regexps for matching file names in compiler output, replacing defaults."
   '(if (not (char-equal ?< (char-after))) (point)
        (with-syntax-table move-mode-syntax-table+<>
          (save-excursion (forward-sexp) (point))))
-  "Form that, when evaluated, with the point over an open angled bracket,
-   returns the position one after the matching close angled bracket.")
+  "Returns position one after a matching closed angle bracket.
+
+When the form is evaluaed with the point over an open angled bracket.")
 
 (defconst move-generic-constraint-matcher
   `(,(regexp-opt move-abilities 'symbols)
     ,move-limit-by-<>-form nil
     (0 font-lock-type-face))
-  "Font lock sub-matcher for type constraints on generic type parameters,
-   enclosed by angle brackets.")
+  "Font lock sub-matcher for type constraints on generic type parameters.
+
+Generic type parameters are enclosed by type parameters.")
 
 (defvar move-mode-font-lock-keywords
   `((,(regexp-opt move-keywords 'symbols)      . font-lock-keyword-face)
@@ -321,42 +349,43 @@ Defines regexps for matching file names in compiler output, replacing defaults."
 
     (eval move--register-builtins)))
 
-;;; Compilation ============================================================ ;;;
-
-(defvar move-error-pattern
-  (let* ((err  "error\\[E[0-9]+\\]:\s[^\n]+")
-         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
-         (file "\\([^\n]+\\)")
-         (line "\\([0-9]+\\)")
-         (col  "\\([0-9]+\\)")
-         (patt (concat err "\n" box file ":" line ":" col)))
-    (list patt 'move--expand-compilation-source 2 3 0))
-  "Link to sources for compilation errors.")
-
-(defvar move-warning-pattern
-  (let* ((warn "warning\\[W[0-9]+\\]:\s[^\n]+")
-         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
-         (file "\\([^\n]+\\)")
-         (line "\\([0-9]+\\)")
-         (col  "\\([0-9]+\\)")
-         (patt (concat warn "\n" box file ":" line ":" col)))
-    (list patt 'move--expand-compilation-source 2 3 1))
-  "Link to sources for compilation warnings.")
-
 ;;; Interactive Functions ================================================== ;;;
 
-(defun move-build  () (interactive) (move--compilation-start "build"))
-(defun move-prover () (interactive) (move--compilation-start "prover"))
-(defun move-test   () (interactive) (move--compilation-start "test"))
+(defun move-build ()
+  "Run `move build', returning output in a compilation buffer.
+
+`move' refers to the move binary, which is customizable at `move-bin'."
+  (interactive)
+  (move--compilation-start "build"))
+
+(defun move-prover ()
+  "Run `move prover', returning output in a compilation buffer.
+
+`move' refers to the move binary, which is customizable at `move-bin'."
+  (interactive)
+  (move--compilation-start "prover"))
+
+(defun move-test ()
+  "Run `move test', returning output in a compilation buffer.
+
+`move' refers to the move binary, which is customizable at `move-bin'."
+  (interactive)
+  (move--compilation-start "test"))
 
 (defun move-disassemble (module-name)
+  "Disassemble MODULE-NAME, returning the output in a compilation buffer.
+
+Uses the `disassemble' subcommand, passing MODULE-NAME with its `--name'
+argument.  `move' refers to the move binary, which is customizable at
+`move-bin'."
   (interactive "sModule: ")
   (move--compilation-start "disassemble" "--name" module-name))
 
 (defun move-mode-indent-line ()
-  "Sets the indent of the current line to the column calculated by
-   MOVE--INDENT-COLUMN, jumping to that column if the point is currently before
-   it, and leaving the point in place otherwise."
+  "Set the indent of the current line.
+
+The column is calculated by MOVE--INDENT-COLUMN.  Jump to that column if the
+point is currently before it, leave the point in place otherwise."
   (interactive)
   (let ((indent (move--indent-column)))
     (when indent
@@ -368,8 +397,7 @@ Defines regexps for matching file names in compiler output, replacing defaults."
 ;;; Comments and Fill ====================================================== ;;;
 
 (defun move-mode-distinguish-comments (state)
-  "Distinguish between doc comments and normal comments in the given syntax
-   STATE."
+  "Distinguish between doc comments and normal comments in syntax STATE."
   (save-excursion
     (goto-char (nth 8 state))
     (cond ((looking-at "//[/!][^/!]")
@@ -378,13 +406,17 @@ Defines regexps for matching file names in compiler output, replacing defaults."
            'font-lock-doc-face)
           ('font-lock-comment-face))))
 
-(defun move-mode-comment-line-break (&optional arg)
-  "Create a new line continuing the comment at point."
+(defun move-mode-comment-line-break (&optional soft)
+  "Create a new line continuing the comment at point.
+
+SOFT is forwarded to `comment-indent-new-line'."
   (let ((fill-prefix (move-mode-adaptive-fill)))
-    (comment-indent-new-line arg)))
+    (comment-indent-new-line soft)))
 
 (defun move-mode-fill-paragraph (&rest args)
-  "Move comment-aware wrapper for `fill-paragraph'."
+  "Move comment-aware wrapper for `fill-paragraph'.
+
+ARGS are forwarded to a call of `fill-paragraph', as-is."
   (let ((fill-prefix (move-mode-adaptive-fill))
         (fill-paragraph-handle-comment t)
         (fill-paragraph-function
@@ -393,13 +425,17 @@ Defines regexps for matching file names in compiler output, replacing defaults."
     (apply #'fill-paragraph args) t))
 
 (defun move-mode-auto-fill (&rest args)
-  "Move comment-aware wrapper for `do-auto-fill'."
+  "Move comment-aware wrapper for `do-auto-fill'.
+
+ARGS are forwarded to a call of `do-auto-fill', as-is."
   (let ((fill-prefix (move-mode-adaptive-fill)))
     (apply #'do-auto-fill args) t))
 
 (defun move-mode-adaptive-fill ()
-  "If the point is currently in a comment, return the fill prefix to use to
-   continue that comment, otherwise return the existing FILL-PREFIX."
+  "Pick the `fill-prefix' based on context.
+
+If the point is currently in a comment, return the fill prefix to us to continue
+that comment, otherwise return the existing `fill-prefix'."
   (save-match-data
     (save-excursion
       (if (not (move--ppss-in-comment))
@@ -422,13 +458,13 @@ Defines regexps for matching file names in compiler output, replacing defaults."
 ;;; Private Helper Functions =============================================== ;;;
 
 (defun move--expand-compilation-source ()
-  "Resolve the file name for the compileration buffer pattern (group 1) relative
-   to `compilation-directory'."
+  "Resolve compiler error/warning files relative to `compilation-directory'."
   (expand-file-name (match-string-no-properties 1) compilation-directory))
 
 (defun move--compilation-start (sub-command &rest args)
-  "Find the Move project root for the current file, and run SUB-COMMAND of the
-   Move CLI on it, with MOVE-DEFAULT-ARGUMENTS."
+  "Run a `move' sub-command from the Move project root.
+
+Invokes `move-bin' with `move-default-arguments' SUB-COMMAND, and ARGS."
   (let* ((compilation-directory
           (locate-dominating-file default-directory "Move.toml")))
     (compilation-start
@@ -439,41 +475,57 @@ Defines regexps for matching file names in compiler output, replacing defaults."
      'move-compilation-mode)))
 
 (defun move--register-builtins ()
-  "Generate a font-lock MATCHER form for built-in constructs, specified via the
-   MOVE-BUILTINS custom variable."
+  "Generate a font-lock matcher form for built-in constructs.
+
+The list of built-ins is specified via the `move-builtins' custom variable."
   `(,(regexp-opt move-builtins 'symbols) . font-lock-builtin-face))
 
-(defun move--ppss-inner-paren   () (nth 1 (syntax-ppss)))
-(defun move--ppss-in-comment    () (nth 4 (syntax-ppss)))
-(defun move--ppss-comment-start () (nth 8 (syntax-ppss)))
+(defun move--ppss-inner-paren ()
+  "Character address of innermost containing list, or nil if none."
+  (nth 1 (syntax-ppss)))
+
+(defun move--ppss-in-comment ()
+  "Whether or not the cursor is within a comment.
+
+NIL if outside a comment, T if inside a non-nestable comment, or an integer --
+the level of nesting -- if inside a nestable comment."
+  (nth 4 (syntax-ppss)))
+
+(defun move--ppss-comment-start ()
+  "Character address for start of comment or string."
+  (nth 8 (syntax-ppss)))
 
 (defun move--prev-assignment (bound)
-  "Search backwards from the current point until BOUND looking for an `='
-   character that isn't in a comment.  Returns `t' on success, with the point
-   over the character, and `nil' otherwise with the point at an indeterminate
-   position."
+  "Find the previous assignment character after BOUND.
+
+Search backwards from the current point until BOUND looking for an `='
+character that isn't in a comment.  Returns T on success, with the point over
+the character, and NIL otherwise with the point at an indeterminate position."
   (and (search-backward "=" bound t)
        (or (not (move--ppss-in-comment))
            (move--prev-assignment bound))))
 
 (defun move--next-terminator (bound)
-  "Search forwards from the current point until BOUND looking for a `;'
-   character that isn't in a comment.  Returns `t' on success, with the point
-   over the character, and `nil' otherwise with the point at an indeterminate
-   position."
+  "Find the next statement terminator before BOUND.
+
+Search forwards from the current point until BOUND looking for a `;' character
+that isn't in a comment.  Returns T on success, with the point over the
+character, and NIL otherwise with the point at an indeterminate position."
   (and (search-forward ";" bound t)
        (or (not (move--ppss-in-comment))
-           (move--next-terminator bound)))) 
+           (move--next-terminator bound))))
 
 (defun move--indent-column ()
-  "Calculates the column to indent the current line to.  The default indent is
-   MOVE-INDENT-OFFSET greater than the indent of the line containing the
-   innermost parenthesis at point, or 0 if there is no such innermost paren.
+  "Calculates the column to indent the current line to.
 
-   This column is modified for closing parens, which are dedented by the offset,
-   continuation lines of `/*'-style comments, which are indented by 1 to line up
-   their `*', and assignment continuation lines, which are indented by a further
-   offset."
+The default indent is `move-indent-offset' greater than the indent of the line
+containing the innermost parenthesis at point, or 0 if there is no such
+innermost paren.
+
+This column is modified for closing parens, which are dedented by the offset,
+continuation lines of `/*'-style comments, which are indented by 1 to line up
+their `*', and assignment continuation lines, which are indented by a further
+offset."
   (save-excursion
     (back-to-indentation)
     (let* ((current-posn   (point))
