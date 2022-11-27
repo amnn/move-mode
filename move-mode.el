@@ -21,7 +21,7 @@
 
 
 
-;;; Constants for use with Customization
+;;; Constants for use with Customization =================================== ;;;
 
 (defconst core-move-builtin-functions
   '("assert!" "borrow_global" "freeze" "move_from" "move_to")
@@ -35,7 +35,7 @@
   "Keywords that are only used by the move-prover.  Can be added to
    MOVE-BUILTINS to enable highlighting, defaults to not.")
 
-;;; Customization
+;;; Customization ========================================================== ;;;
 
 (defgroup move-mode nil
   "Support for Move source code."
@@ -62,6 +62,8 @@
   "Default arguments when running common move CLI commands."
   :type 'string
   :group 'move-mode)
+
+;;; Syntax ================================================================= ;;;
 
 (defconst move-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -95,7 +97,7 @@
   "A variant of the syntax table that recognises angle braces as a bracketed
    construct, for use in detecting generic parameters")
 
-;; Keybindings
+;;; Keybindings ============================================================ ;;;
 
 (defvar move-mode-map
   (let ((map (make-sparse-keymap)))
@@ -104,6 +106,8 @@
     (define-key map (kbd "C-c C-c C-p") 'move-prover)
     (define-key map (kbd "C-c C-c C-t") 'move-test)
     map))
+
+;;; Modes ================================================================== ;;;
 
 ;;;###autoload
 (define-derived-mode move-mode prog-mode "Move"
@@ -161,6 +165,25 @@
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.move\\'" . move-mode))
+
+(define-compilation-mode move-compilation-mode "move-compilation"
+  "Move compilation mode.
+
+Defines regexps for matching file names in compiler output, replacing defaults."
+  (setq-local compilation-error-regexp-alist-alist nil)
+  (add-to-list 'compilation-error-regexp-alist-alist
+               (cons 'move-error move-error-pattern))
+  (add-to-list 'compilation-error-regexp-alist-alist
+               (cons 'move-warning move-warning-pattern))
+
+  (setq-local compilation-error-regexp-alist nil)
+  (add-to-list 'compilation-error-regexp-alist 'move-error)
+  (add-to-list 'compilation-error-regexp-alist 'move-warning)
+
+  (add-hook 'compilation-filter-hook
+            'move--ansi-color-compilation-filter nil t))
+
+;;; Font Lock ============================================================== ;;;
 
 (defconst move-keywords
   '("abort" "acquires" "as" "break" "const" "continue" "copy" "else" "entry"
@@ -255,6 +278,30 @@
 
     (eval move--register-builtins)))
 
+;;; Compilation ============================================================ ;;;
+
+(defvar move-error-pattern
+  (let* ((err  "error\\[E[0-9]+\\]:\s[^\n]+")
+         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
+         (file "\\([^\n]+\\)")
+         (line "\\([0-9]+\\)")
+         (col  "\\([0-9]+\\)")
+         (patt (concat err "\n" box file ":" line ":" col)))
+    (list patt 'move--expand-compilation-source 2 3 0))
+  "Link to sources for compilation errors.")
+
+(defvar move-warning-pattern
+  (let* ((warn "warning\\[W[0-9]+\\]:\s[^\n]+")
+         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
+         (file "\\([^\n]+\\)")
+         (line "\\([0-9]+\\)")
+         (col  "\\([0-9]+\\)")
+         (patt (concat warn "\n" box file ":" line ":" col)))
+    (list patt 'move--expand-compilation-source 2 3 1))
+  "Link to sources for compilation warnings.")
+
+;;; Interactive Functions ================================================== ;;;
+
 (defun move-build  () (interactive) (move--compilation-start "build"))
 (defun move-prover () (interactive) (move--compilation-start "prover"))
 (defun move-test   () (interactive) (move--compilation-start "test"))
@@ -262,17 +309,6 @@
 (defun move-disassemble (module-name)
   (interactive "sModule: ")
   (move--compilation-start "disassemble" "--name" module-name))
-
-(defun move-mode-distinguish-comments (state)
-  "Distinguish between doc comments and normal comments in the given syntax
-   STATE."
-  (save-excursion
-    (goto-char (nth 8 state))
-    (cond ((looking-at "//[/!][^/!]")
-           'font-lock-doc-face)
-          ((looking-at "/[*][*!][^*!]")
-           'font-lock-doc-face)
-          ('font-lock-comment-face))))
 
 (defun move-mode-indent-line ()
   "Sets the indent of the current line to the column calculated by
@@ -285,6 +321,19 @@
           (indent-line-to indent)
         (save-excursion
           (indent-line-to indent))))))
+
+;;; Comments and Fill ====================================================== ;;;
+
+(defun move-mode-distinguish-comments (state)
+  "Distinguish between doc comments and normal comments in the given syntax
+   STATE."
+  (save-excursion
+    (goto-char (nth 8 state))
+    (cond ((looking-at "//[/!][^/!]")
+           'font-lock-doc-face)
+          ((looking-at "/[*][*!][^*!]")
+           'font-lock-doc-face)
+          ('font-lock-comment-face))))
 
 (defun move-mode-comment-line-break (&optional arg)
   "Create a new line continuing the comment at point."
@@ -327,47 +376,12 @@
             (concat comment-indent " * "))
            (t fill-prefix)))))))
 
-(defun expand-compilation-source ()
+;;; Private Helper Functions =============================================== ;;;
+
+(defun move--expand-compilation-source ()
   "Resolve the file name for the compileration buffer pattern (group 1) relative
    to `compilation-directory'."
   (expand-file-name (match-string-no-properties 1) compilation-directory))
-
-(defvar move-error-pattern
-  (let* ((err  "error\\[E[0-9]+\\]:\s[^\n]+")
-         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
-         (file "\\([^\n]+\\)")
-         (line "\\([0-9]+\\)")
-         (col  "\\([0-9]+\\)")
-         (patt (concat err "\n" box file ":" line ":" col)))
-    (list patt 'expand-compilation-source 2 3 0))
-  "Link to sources for compilation errors.")
-
-(defvar move-warning-pattern
-  (let* ((warn "warning\\[W[0-9]+\\]:\s[^\n]+")
-         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
-         (file "\\([^\n]+\\)")
-         (line "\\([0-9]+\\)")
-         (col  "\\([0-9]+\\)")
-         (patt (concat warn "\n" box file ":" line ":" col)))
-    (list patt 'expand-compilation-source 2 3 1))
-  "Link to sources for compilation warnings.")
-
-(define-compilation-mode move-compilation-mode "move-compilation"
-  "Move compilation mode.
-
-Defines regexps for matching file names in compiler output, replacing defaults."
-  (setq-local compilation-error-regexp-alist-alist nil)
-  (add-to-list 'compilation-error-regexp-alist-alist
-               (cons 'move-error move-error-pattern))
-  (add-to-list 'compilation-error-regexp-alist-alist
-               (cons 'move-warning move-warning-pattern))
-
-  (setq-local compilation-error-regexp-alist nil)
-  (add-to-list 'compilation-error-regexp-alist 'move-error)
-  (add-to-list 'compilation-error-regexp-alist 'move-warning)
-
-  (add-hook 'compilation-filter-hook
-            'move--ansi-color-compilation-filter nil t))
 
 (defun move--compilation-start (sub-command &rest args)
   "Find the Move project root for the current file, and run SUB-COMMAND of the
