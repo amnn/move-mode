@@ -63,6 +63,43 @@
   :type 'string
   :group 'move-mode)
 
+;;; Faces ================================================================== ;;;
+
+(defface move-compilation-message-face
+  '((t :inherit default))
+  "`move-compilation-mode'-specific override of `compilation-message-face' that
+   inherits from `default' face to avoid interfering with the ANSI colour
+   filter."
+  :group 'move-mode)
+
+(defface move-compilation-error-face
+  '((t :inherit default))
+  "`move-compilation-mode'-specific override of `compilation-error-face' that
+   inherits from `default' face to avoid interfering with the ANSI colour
+   filter."
+  :group 'move-mode)
+
+(defface move-compilation-warning-face
+  '((t :inherit default))
+  "`move-compilation-mode'-specific override of `compilation-warning-face' that
+   inherits from `default' face to avoid interfering with the ANSI colour
+   filter."
+  :group 'move-mode)
+
+(defface move-compilation-line-face
+  '((t :inherit default))
+  "`move-compilation-mode'-specific override of `compilation-line-face' that
+   inherits from `default' face to avoid interfering with the ANSI colour
+   filter."
+  :group 'move-mode)
+
+(defface move-compilation-column-face
+  '((t :inherit default))
+  "`move-compilation-mode'-specific override of `compilation-column-face' that
+   inherits from `default' face to avoid interfering with the ANSI colour
+   filter."
+  :group 'move-mode)
+
 ;;; Syntax ================================================================= ;;;
 
 (defconst move-mode-syntax-table
@@ -179,6 +216,12 @@ Defines regexps for matching file names in compiler output, replacing defaults."
   (setq-local compilation-error-regexp-alist nil)
   (add-to-list 'compilation-error-regexp-alist 'move-error)
   (add-to-list 'compilation-error-regexp-alist 'move-warning)
+
+  (setq-local compilation-message-face 'move-compilation-message-face)
+  (setq-local compilation-error-face   'move-compilation-error-face)
+  (setq-local compilation-warning-face 'move-compilation-warning-face)
+  (setq-local compilation-column-face  'move-compilation-column-face)
+  (setq-local compilation-line-face    'move-compilation-line-face)
 
   (add-hook 'compilation-filter-hook
             'move--ansi-color-compilation-filter nil t))
