@@ -143,10 +143,10 @@ For use in detecting generic paramters.")
 
 (defvar move-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c C-b") 'move-build)
-    (define-key map (kbd "C-c C-c C-d") 'move-disassemble)
-    (define-key map (kbd "C-c C-c C-p") 'move-prover)
-    (define-key map (kbd "C-c C-c C-t") 'move-test)
+    (define-key map (kbd "C-c C-c C-b") #'move-build)
+    (define-key map (kbd "C-c C-c C-d") #'move-disassemble)
+    (define-key map (kbd "C-c C-c C-p") #'move-prover)
+    (define-key map (kbd "C-c C-c C-t") #'move-test)
     map))
 
 ;;; Compilation ============================================================ ;;;
@@ -158,7 +158,7 @@ For use in detecting generic paramters.")
          (line "\\([0-9]+\\)")
          (col  "\\([0-9]+\\)")
          (patt (concat err "\n" box file ":" line ":" col)))
-    (list patt 'move--expand-compilation-source 2 3 0))
+    (list patt #'move--expand-compilation-source 2 3 0))
   "Link to sources for compilation errors.")
 
 (defvar move-warning-pattern
@@ -168,7 +168,7 @@ For use in detecting generic paramters.")
          (line "\\([0-9]+\\)")
          (col  "\\([0-9]+\\)")
          (patt (concat warn "\n" box file ":" line ":" col)))
-    (list patt 'move--expand-compilation-source 2 3 1))
+    (list patt #'move--expand-compilation-source 2 3 1))
   "Link to sources for compilation warnings.")
 
 ;;; Modes ================================================================== ;;;
@@ -199,7 +199,7 @@ For use in detecting generic paramters.")
   (setq-local open-paren-in-column-0-is-defun-start nil)
 
   ;; Indentation
-  (setq-local indent-line-function 'move-mode-indent-line)
+  (setq-local indent-line-function #'move-mode-indent-line)
   (setq-local electric-indent-chars
               (cons ?} (and (boundp 'electric-indent-chars)
                             electric-indent-chars)))
@@ -251,7 +251,7 @@ Defines regexps for matching file names in compiler output, replacing defaults."
   (setq-local compilation-line-face    'move-compilation-line-face)
 
   (add-hook 'compilation-filter-hook
-            'move--ansi-color-compilation-filter nil t))
+            #'move--ansi-color-compilation-filter nil t))
 
 ;;; Font Lock ============================================================== ;;;
 
