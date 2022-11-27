@@ -9,4 +9,4 @@
   (add-to-list 'load-path (file-name-directory load-file-name))
   (require 'move-mode)
 
-  (find-file (concat repo-root "test/sources/example.move")))
+  (find-file (concat repo-root "test/highlight/sources/example.move")))
