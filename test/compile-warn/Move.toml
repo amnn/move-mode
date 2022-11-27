@@ -1,8 +1,6 @@
 [package]
-name = "Highlight"
+name = "Compile Warning"
 version = "0.1.0"
 
 [addresses]
 example = "0x0"
-std     = "0x1"
-acme    = "0x2"
