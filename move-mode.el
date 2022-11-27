@@ -334,19 +334,21 @@
 
 (defvar move-error-pattern
   (let* ((err  "error\\[E[0-9]+\\]:\s[^\n]+")
-         (file "\s+\u250c\u2500\s\\([^\n]+\\)")
+         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
+         (file "\\([^\n]+\\)")
          (line "\\([0-9]+\\)")
          (col  "\\([0-9]+\\)")
-         (patt (concat err "\n" file ":" line ":" col)))
+         (patt (concat err "\n" box file ":" line ":" col)))
     (list patt 'expand-compilation-source 2 3 0))
   "Link to sources for compilation errors.")
 
 (defvar move-warning-pattern
   (let* ((warn "warning\\[W[0-9]+\\]:\s[^\n]+")
-         (file "\s+\u250c\u2500\s\\([^\n]+\\)")
+         (box  "\s*\\(?:\u2502\s+\\)*\u250c\u2500\s")
+         (file "\\([^\n]+\\)")
          (line "\\([0-9]+\\)")
          (col  "\\([0-9]+\\)")
-         (patt (concat warn "\n" file ":" line ":" col)))
+         (patt (concat warn "\n" box file ":" line ":" col)))
     (list patt 'expand-compilation-source 2 3 1))
   "Link to sources for compilation warnings.")
 
