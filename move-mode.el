@@ -255,13 +255,13 @@
 
     (eval move--register-builtins)))
 
-(defun move-build  () (interactive) (move--compile "build"))
-(defun move-prover () (interactive) (move--compile "prover"))
-(defun move-test   () (interactive) (move--compile "test"))
+(defun move-build  () (interactive) (move--compilation-start "build"))
+(defun move-prover () (interactive) (move--compilation-start "prover"))
+(defun move-test   () (interactive) (move--compilation-start "test"))
 
 (defun move-disassemble (module-name)
   (interactive "sModule: ")
-  (move--compile "disassemble" "--name" module-name))
+  (move--compilation-start "disassemble" "--name" module-name))
 
 (defun move-mode-distinguish-comments (state)
   "Distinguish between doc comments and normal comments in the given syntax
@@ -327,21 +327,57 @@
             (concat comment-indent " * "))
            (t fill-prefix)))))))
 
-(defun move--compile (sub-command &rest args)
+(defun expand-compilation-source ()
+  "Resolve the file name for the compileration buffer pattern (group 1) relative
+   to `compilation-directory'."
+  (expand-file-name (match-string-no-properties 1) compilation-directory))
+
+(defvar move-error-pattern
+  (let* ((err  "error\\[E[0-9]+\\]:\s[^\n]+")
+         (file "\s+\u250c\u2500\s\\([^\n]+\\)")
+         (line "\\([0-9]+\\)")
+         (col  "\\([0-9]+\\)")
+         (patt (concat err "\n" file ":" line ":" col)))
+    (list patt 'expand-compilation-source 2 3 0))
+  "Link to sources for compilation errors.")
+
+(defvar move-warning-pattern
+  (let* ((warn "warning\\[W[0-9]+\\]:\s[^\n]+")
+         (file "\s+\u250c\u2500\s\\([^\n]+\\)")
+         (line "\\([0-9]+\\)")
+         (col  "\\([0-9]+\\)")
+         (patt (concat warn "\n" file ":" line ":" col)))
+    (list patt 'expand-compilation-source 2 3 1))
+  "Link to sources for compilation warnings.")
+
+(define-compilation-mode move-compilation-mode "move-compilation"
+  "Move compilation mode.
+
+Defines regexps for matching file names in compiler output, replacing defaults."
+  (setq-local compilation-error-regexp-alist-alist nil)
+  (add-to-list 'compilation-error-regexp-alist-alist
+               (cons 'move-error move-error-pattern))
+  (add-to-list 'compilation-error-regexp-alist-alist
+               (cons 'move-warning move-warning-pattern))
+
+  (setq-local compilation-error-regexp-alist nil)
+  (add-to-list 'compilation-error-regexp-alist 'move-error)
+  (add-to-list 'compilation-error-regexp-alist 'move-warning)
+
+  (add-hook 'compilation-filter-hook
+            'move--ansi-color-compilation-filter nil t))
+
+(defun move--compilation-start (sub-command &rest args)
   "Find the Move project root for the current file, and run SUB-COMMAND of the
    Move CLI on it, with MOVE-DEFAULT-ARGUMENTS."
-  (let* ((default-directory
-           (locate-dominating-file default-directory "Move.toml"))
-         (compilation-buffer
-           (compile
-            (combine-and-quote-strings
-             (append (list move-bin sub-command)
-                     (split-string-and-unquote move-default-arguments)
-                     args)))))
-    (save-excursion
-      (set-buffer compilation-buffer)
-      (add-hook 'compilation-filter-hook
-                'move--ansi-color-compilation-filter 0 t))))
+  (let* ((compilation-directory
+          (locate-dominating-file default-directory "Move.toml")))
+    (compilation-start
+     (combine-and-quote-strings
+      (append (list move-bin sub-command)
+              (split-string-and-unquote move-default-arguments)
+              args))
+     'move-compilation-mode)))
 
 (defun move--register-builtins ()
   "Generate a font-lock MATCHER form for built-in constructs, specified via the
