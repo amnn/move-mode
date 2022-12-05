@@ -8,10 +8,7 @@
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: languages
 
-;;; License:
-
-;; This file is distributed under the terms of the Apache License
-;; (version 2.0).
+;;; SPDX-License-Identifier: Apache-2.0
 
 ;;; Commentary:
 
