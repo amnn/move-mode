@@ -1,5 +1,7 @@
 # move-mode
 
+[![MELPA Stable](https://stable.melpa.org/packages/move-mode-badge.svg)](https://stable.melpa.org/#/move-mode)
+
 `move-mode` is an Emacs major-mode for editing smart contracts written
 in the [Move](https://github.com/move-language/move) programming
 language.  Supports Emacs 25.1 and above (tested on Emacs for Mac OS X
@@ -32,8 +34,7 @@ The recommended approach is to install this package using
 including the following to your `init.el`:
 
 ``` emacs-lisp
-(use-package move-mode
-  :straight (:host github :repo "amnn/move-mode" :branch "main"))
+(use-package move-mode :straight t)
 ```
 
 ### Just `straight.el`:
@@ -41,13 +42,17 @@ including the following to your `init.el`:
 You can also use `straight.el` directly:
 
 ```emacs-lisp
-(straight-use-package
-  '(move-mode :type git :host github :repo "amnn/move-mode"))
+(straight-use-package 'move-mode)
 ```
 
 ### [MELPA](https://github.com/melpa/melpa)
 
-`move-mode` is not available on MELPA yet, watch this space.
+Or install it from MELPA with `package-install`, using:
+
+``` emacs-lisp
+M-x package-refresh-contents RET
+M-x package-install RET move-mode RET
+```
 
 ### (Not Recommended) Manual Install
 
