@@ -132,6 +132,15 @@ A full list of supported features can be found in the
 `[features]` section of
 [its Cargo.toml](https://github.com/move-language/move/blob/main/language/move-analyzer/Cargo.toml).
 
+### [Lsp-bridge](https://github.com/manateelazycat/lsp-bridge)
+
+Once `move-analyzer` is
+[installed](https://github.com/manateelazycat/lsp-bridge#installation),
+you can enjoy Move programming with pleasure. Lsp-bridge already
+[provides Move language
+support](https://github.com/manateelazycat/lsp-bridge/pull/612), out
+of the box.
+
 ### [Eglot](https://github.com/joaotavora/eglot)
 
 Once `move-analyzer` is installed, integrating it into Eglot is as
