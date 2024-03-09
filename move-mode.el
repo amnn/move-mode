@@ -4,7 +4,7 @@
 
 ;; Author: Ashok Menon
 ;; URL: https://github.com/amnn/move-mode
-;; Version: 1.0.0
+;; Version: 1.0.1
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: languages
 
