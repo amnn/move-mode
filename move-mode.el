@@ -499,6 +499,7 @@ Search backwards from the current point until BOUND looking for an `='
 character that isn't in a comment.  Returns T on success, with the point over
 the character, and NIL otherwise with the point at an indeterminate position."
   (and (search-backward "=" bound t)
+       (not (memq (char-before) '(?= ?! ?< ?>)))
        (or (not (move--ppss-in-comment))
            (move--prev-assignment bound))))
 
