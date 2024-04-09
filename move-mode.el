@@ -254,9 +254,9 @@ Defines regexps for matching file names in compiler output, replacing defaults."
 
 (defconst move-keywords
   '("abort" "acquires" "as" "break" "const" "continue" "copy" "else" "entry"
-    "false" "friend" "fun" "has" "if" "invariant" "let" "loop" "module" "move"
-    "mut" "native" "public" "return" "script" "spec" "struct" "true" "use"
-    "while"))
+    "enum" "false" "for" "friend" "fun" "has" "if" "invariant" "let" "loop"
+    "macro" "match" "module" "move" "mut" "native" "package" "public" "return"
+    "script" "spec" "struct" "true" "type" "use" "while"))
 
 (defconst move-integer-types
   '("u8" "u16" "u32" "u64" "u128" "u256"))
@@ -312,6 +312,10 @@ Generic type parameters are enclosed by type parameters.")
     (,(concat "\\(" move-ident-re "\\)\\s-*:[^:]")
      1 font-lock-variable-name-face)
 
+    ;; Block labels
+    (,(concat "'\\(" move-ident-re "\\)\\_>")
+     1 font-lock-variable-name-face)
+
     ;; Let bindings with inferred type
     (,(concat "\\_<let\\s-+\\(" move-ident-re "\\)\\_>")
      1 font-lock-variable-name-face)
@@ -336,8 +340,11 @@ Generic type parameters are enclosed by type parameters.")
     ("\\_<has\\_>"
 
      (,(regexp-opt move-abilities 'symbols)
+      ;; Only fontify abilities on the same line, up to a starting
+      ;; curly brace (for structs with named fields), or a semicolon
+      ;; (for structs with anonymous fields).
       (save-excursion
-        (re-search-forward "{" (point-at-eol) t +1)
+        (re-search-forward "{\\|;" (point-at-eol) t +1)
         (point))
 
       nil

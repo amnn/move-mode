@@ -1,0 +1,9 @@
+[package]
+name = "Move2024"
+version = "0.1.0"
+edition = "2024.alpha"
+
+[addresses]
+example = "0x0"
+std     = "0x1"
+acme    = "0x2"

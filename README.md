@@ -120,17 +120,24 @@ it is possible to integrate Move Analyzer with Emacs.
 The analyzer is installed directly from its repo, via `cargo`:
 
 ``` shell
+# Move on Sui
+$ cargo install --git https://github.com/MystenLabs/sui.git move-analyzer
+
+# Generic Move Analyzer
 $ cargo install --git https://github.com/move-language/move move-analyzer
 ```
 
-It can be modified using `--feature` flags passed to the `install`
-command above. The two most common ones are:
-- `--features "address20"` option for Move flavors requiring 20-byte long addresses (e.g., Sui Move)
-- `--features "address32"` option for Move flavors requiring 32-byte long addresses (e.g., Aptos Move)
+The generic Move Analyzer can be modified using `--feature` flags
+passed to the `install` command above. The the most common one is
+`--features "address32"` option for Move flavors requiring 32-byte
+long addresses (e.g. Aptos Move).
 
 A full list of supported features can be found in the
 `[features]` section of
 [its Cargo.toml](https://github.com/move-language/move/blob/main/language/move-analyzer/Cargo.toml).
+
+> [!NOTE]
+> Move Analyzer for Sui does not require feature flags.
 
 ### [Lsp-bridge](https://github.com/manateelazycat/lsp-bridge)
 
@@ -169,7 +176,8 @@ allow Eglot to find projects by looking for `Move.toml`:
   (cdr project)))
 ```
 
-NOTE: This will not affect finding project files outside of the LSP.
+> [!NOTE]
+> This will not affect finding project files outside of the LSP.
 
 ### [Lsp mode](https://emacs-lsp.github.io/lsp-mode/)
 
@@ -199,6 +207,6 @@ Contributions are very welcome! If you notice a bug, try updating
 - The sequence of actions you took.
 - The expected outcome.
 - The actual outcome, with screenshots if relevant.
-  
-If you are interested in working on features please take a look at current 
+
+If you are interested in working on features please take a look at current
 [open issues](https://github.com/amnn/move-mode/issues) for inspiration!
