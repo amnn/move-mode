@@ -495,6 +495,34 @@ NIL if outside a comment, T if inside a non-nestable comment, or an integer --
 the level of nesting -- if inside a nestable comment."
   (nth 4 (syntax-ppss)))
 
+(defun move--ppss-in-annotation ()
+  "Whether or not the cursor is within an annotation.
+
+NIL if outside an annotation, T otherwise. Annotations are syntax elements of
+the form `#[foo = bar]', `#[foo(bar)]', etc."
+  (cl-labels
+      ((find-annotation (open-parens)
+         (cond
+          ;; No more open parens to look through, we're done.
+          ((not open-parens) nil)
+
+          ;; Parentheses can appear inside annotations, so we skip over them.
+          ((char-equal ?\( (char-after (car open-parens)))
+           (find-annotation (cdr open-parens)))
+
+          ;; If we find an open square bracket, we can check whether it is
+          ;; immediately preceded by a hash.
+          ((char-equal ?\[ (char-after (car open-parens)))
+           (goto-char (car open-parens))
+           (backward-char)
+           (looking-at "#\\["))
+
+          ;; In any other case, it doesn't matter what the paren is, we know
+          ;; we're not in an annotation.
+          (t nil))))
+    (save-excursion
+      (find-annotation (reverse (nth 9 (syntax-ppss)))))))
+
 (defun move--ppss-comment-start ()
   "Character address for start of comment or string."
   (nth 8 (syntax-ppss)))
@@ -502,13 +530,22 @@ the level of nesting -- if inside a nestable comment."
 (defun move--prev-assignment (bound)
   "Find the previous assignment character after BOUND.
 
-Search backwards from the current point until BOUND looking for an `='
-character that isn't in a comment.  Returns T on success, with the point over
-the character, and NIL otherwise with the point at an indeterminate position."
-  (and (search-backward "=" bound t)
-       (not (memq (char-before) '(?= ?! ?< ?>)))
-       (or (not (move--ppss-in-comment))
-           (move--prev-assignment bound))))
+Search backwards from the current point until BOUND looking for an `=' character
+that isn't part of a comparison operator, or in a comment or an annotation.
+Returns T on success, with the point over the character, and NIL otherwise with
+the point at an indeterminate position."
+  (cond
+   ;; If we didn't find an `=' within the bound, we're done.
+   ((not (search-backward "=" bound t)) nil)
+
+   ;; This isn't the `=' we're looking for, keep searching.
+   ((or (memq (char-before) '(?= ?! ?< ?>))
+        (move--ppss-in-comment)
+        (move--ppss-in-annotation))
+    (move--prev-assignment bound))
+
+   ;; We found it!
+   (t t)))
 
 (defun move--next-terminator (bound)
   "Find the next statement terminator before BOUND.
