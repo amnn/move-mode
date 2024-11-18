@@ -20,6 +20,7 @@
 
 
 (require 'compile)
+(require 'cl-lib)
 
 ;;; Constants for use with Customization =================================== ;;;
 
