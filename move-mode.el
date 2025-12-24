@@ -255,9 +255,9 @@ Defines regexps for matching file names in compiler output, replacing defaults."
 
 (defconst move-keywords
   '("abort" "acquires" "as" "break" "const" "continue" "copy" "else" "entry"
-    "enum" "false" "for" "friend" "fun" "has" "if" "invariant" "let" "loop"
-    "macro" "match" "module" "move" "mut" "native" "package" "public" "return"
-    "script" "spec" "struct" "true" "type" "use" "while"))
+    "enum" "extend" "false" "for" "friend" "fun" "has" "if" "invariant" "let"
+    "loop" "macro" "match" "module" "move" "mut" "native" "package" "public"
+    "return" "script" "spec" "struct" "true" "type" "use" "while"))
 
 (defconst move-integer-types
   '("u8" "u16" "u32" "u64" "u128" "u256"))
